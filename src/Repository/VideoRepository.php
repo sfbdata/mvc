@@ -84,14 +84,27 @@ class VideoRepository
             ->fetchAll(PDO::FETCH_ASSOC);
 
         return array_map(
-            function (array $videoData) {
-                $video = new Video($videoData['url'], $videoData['title']);
-                $video->setId($videoData['id']);
-
-                return $video;
-            }, 
+            $this->hydrateVideo(...), 
             $videoList 
         );
 
+    }
+
+    public function find(int $id)
+    {
+
+        $stmt = $this->pdo->prepare('SELECT * FROM videos WHERE id = ?;');
+        $stmt->bindValue(1, $id, PDO::FETCH_ASSOC);
+        $stmt->execute();
+
+        return $this->hydrateVideo($stmt->fetch(PDO::FETCH_ASSOC));
+    }
+
+    public function hydrateVideo(array $videoData): Video
+    {
+        $video = new Video($videoData['url'], $videoData['title']);
+        $video->setId($videoData['id']);
+
+        return $video;
     }
 }
